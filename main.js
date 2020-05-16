@@ -147,9 +147,9 @@ function setTile(x, y, tile) {
 
 	let chunk = chunks[key];
 	let index = mod(y, chunkSize) * chunkSize + mod(x, chunkSize);
-	
+
 	if (chunk.data[index] === tile) return false;
-	
+
 	chunk.data[index] = tile;
 	chunk.needsRedraw = true;
 
@@ -157,7 +157,7 @@ function setTile(x, y, tile) {
 		console.log("Lucky", x, y);
 		if (!focused) new Notification("Lucky");
 	}
-	
+
 	return true;
 }
 
@@ -446,7 +446,7 @@ function render() {
 			walkPath = [];
 			mode = "manual";
 		}
-		
+
 		if (mode === "tunnel") {
 			if (localPlayer.pos[tunnelDir] == tunnelTarget) {
 				mode = "manual";
@@ -510,7 +510,7 @@ function render() {
 
 	camera.x = localPlayer.pos.x;
 	camera.y = localPlayer.pos.y;
-	
+
 	if (localPlayer.username !== null) {
 		[[-1, 0], [-1, -1], [0, -1], [1, -1], [1, 0], [1, 1], [0, 1], [-1, 1]].map(offset => {
 			let x = Math.floor(camera.x / chunkSize) + offset[0];
@@ -519,7 +519,7 @@ function render() {
 			fetchChunk(x, y);
 		});
 	}
-	
+
 	// Draw
 	ctx.clearRect(0, 0, canvas.width, canvas.height);
 
@@ -742,6 +742,10 @@ window.addEventListener("load", function() {
 		mode = "tunnel";
 	});
 
+    document.getElementById("eat").addEventListener("click", function() {
+        queueCommands([{"commandName":"eatBread"}]);
+    });
+
 	let chatInput = document.getElementById("chat-input");
 	window.addEventListener("keydown", event => {
 		if (event.code === "Enter" && document.activeElement !== chatInput) {
@@ -812,7 +816,7 @@ window.addEventListener("load", function() {
 					console.log("Move", localPlayer.pos.x, localPlayer.pos.y, "->", cmd.pos.x, cmd.pos.y);
 					localPlayer.pos = cmd.pos;
 					lastInput = Date.now();
-					
+
 					let chunkX = Math.floor(cmd.pos.x / chunkSize);
 					let chunkY = Math.floor(cmd.pos.y / chunkSize);
 					let key = chunkKey(chunkX, chunkY);
