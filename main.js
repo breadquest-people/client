@@ -144,7 +144,7 @@ function setTile(x, y, tile) {
 	let chunk = chunks[key];
 	let index = mod(y, chunkSize) * chunkSize + mod(x, chunkSize);
 	
-	if (chunk.data[index] === tile) return;
+	if (chunk.data[index] === tile) return false;
 	
 	chunk.data[index] = tile;
 	chunk.needsRedraw = true;
@@ -153,6 +153,17 @@ function setTile(x, y, tile) {
 		console.log("Lucky", x, y);
 		if (!focused) new Notification("Lucky");
 	}
+	
+	return true;
+}
+
+async function fetchChunk(x, y) {
+	let chunk = new Chunk(x, y);
+	chunks[chunkKey(x, y)] = chunk;
+	let data = await fetch("https://daydun.com:2627/get/" + x + "/" + y).then(res => res.arrayBuffer());
+	chunk.data = new Uint8Array(data);
+	console.log(data);
+	chunk.needsRedraw = true;
 }
 
 function pathFind(tileX, tileY, condition, noGrief) {
@@ -472,6 +483,15 @@ function render() {
 	camera.x = localPlayer.pos.x;
 	camera.y = localPlayer.pos.y;
 	
+	if (localPlayer.username !== null) {
+		[[-1, 0], [-1, -1], [0, -1], [1, -1], [1, 0], [1, 1], [0, 1], [-1, 1]].map(offset => {
+			let x = Math.floor(camera.x / chunkSize) + offset[0];
+			let y = Math.floor(camera.y / chunkSize) + offset[1];
+			if (chunkKey(x, y) in chunks) return;
+			fetchChunk(x, y);
+		});
+	}
+	
 	// Draw
 	ctx.clearRect(0, 0, canvas.width, canvas.height);
 	
@@ -739,6 +759,13 @@ window.addEventListener("load", function() {
 					console.log("Move", localPlayer.pos.x, localPlayer.pos.y, "->", cmd.pos.x, cmd.pos.y);
 					localPlayer.pos = cmd.pos;
 					lastInput = Date.now();
+					
+					let chunkX = Math.floor(cmd.pos.x / chunkSize);
+					let chunkY = Math.floor(cmd.pos.y / chunkSize);
+					let key = chunkKey(chunkX, chunkY);
+					if (!(key in chunks)) {
+						fetchChunk(chunkX, chunkY);
+					}
 					break;
 				case "removeAllEntities":
 					entities = [localPlayer];
@@ -748,10 +775,19 @@ window.addEventListener("load", function() {
 					onlinePlayers = [];
 					break;
 				case "setTiles":
+					let didChange = false;
 					for (let y=0; y<cmd.size; y++) {
 						for (let x=0; x<cmd.size; x++) {
-							setTile(cmd.pos.x + x, cmd.pos.y + y, cmd.tileList[y * cmd.size + x]);
+							if (setTile(cmd.pos.x + x, cmd.pos.y + y, cmd.tileList[y * cmd.size + x])) {
+								didChange = true;
+							}
 						}
+					}
+					if (didChange) {
+						fetch("https://daydun.com:2627/set/" + cmd.pos.x + "/" + cmd.pos.y, {
+							method: "POST",
+							body: new Uint8Array(cmd.tileList)
+						});
 					}
 					break;
 				case "addChatMessage":
