@@ -1,4 +1,4 @@
-const local = true;
+const local = false;
 
 const emptyTile = 128;
 const blockStartTile = 129;
@@ -57,6 +57,9 @@ let canvas, ctx;
 let ws;
 
 let mode = "manual";
+
+let tunnelTarget = null;
+let tunnelDir = null;
 
 let keysDown = new Set();
 let walkPath = [];
@@ -407,15 +410,43 @@ let directions = [{x: 0, y: -1}, {x: 1, y: 0}, {x: 0, y: 1}, {x: -1, y: 0}];
 function render() {
 	// Input
 	if (Date.now() - lastInput > 1000 / 16 && localCrack === null) {
-		let direction = null;
+        let direction = null;
+
+        if (mode == "tunnel") {
+            if (localPlayer.pos[tunnelDir] == tunnelTarget) {
+                mode = "manual";
+            } else {
+                if (tunnelDir == "x") {
+                    if (localPlayer.pos.x > tunnelTarget) {
+                        // too far right
+                        direction = 3;
+                    } else {
+                        // too far left
+                        direction = 1;
+                    }
+                } else {
+                    if (localPlayer.pos.y > tunnelTarget) {
+                        // too far down
+                        direction = 0;
+                    } else {
+                        direction = 2;
+                    }
+                }
+            }
+        }
+
 		if (keysDown.has("KeyW")) {
 			direction = 0;
+            mode = "manual";
 		} else if (keysDown.has("KeyD")) {
 			direction = 1;
+            mode = "manual";
 		} else if (keysDown.has("KeyS")) {
 			direction = 2;
+            mode = "manual";
 		} else if (keysDown.has("KeyA")) {
 			direction = 3;
+            mode = "manual";
 		}
 
 		let place = false;
@@ -429,7 +460,6 @@ function render() {
 			fromPath = true;
 		} else if (direction !== null) {
 			walkPath = [];
-			mode = "manual";
 		}
 
 		if (direction !== null) {
@@ -682,7 +712,18 @@ window.addEventListener("load", function() {
         }
 
         walkPath = path;
-    })
+    });
+
+    document.getElementById("tunnel-go-x").addEventListener("click", function() {
+        tunnelTarget = document.getElementById("tunnel-param").value;
+        tunnelDir = "x";
+        mode = "tunnel";
+    });
+    document.getElementById("tunnel-go-y").addEventListener("click", function() {
+        tunnelTarget = document.getElementById("tunnel-param").value;
+        tunnelDir = "y";
+        mode = "tunnel";
+    });
 
 	let chatInput = document.getElementById("chat-input");
 	window.addEventListener("keydown", event => {
