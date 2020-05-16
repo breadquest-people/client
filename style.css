@@ -127,3 +127,7 @@ body {
 	line-height: 16px;
 	vertical-align: middle;
 }
+#stats input {
+    padding: 4px;
+    border: 1px solid lightgrey;
+}
