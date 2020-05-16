@@ -1,0 +1,29 @@
+<!DOCTYPE html>
+<html>
+	<head>
+		<meta charset="utf-8">
+		<title>BreadQuest</title>
+		<link href="style.css" rel="stylesheet">
+		<script src="main.js"></script>
+	</head>
+	<body>
+		<canvas id="canvas"></canvas>
+		<div id="chat">
+			<ul id="chat-messages"></ul>
+			<input id="chat-input" type="text" placeholder="Press enter to chat...">
+		</div>
+		<div id="stats">
+			<div>(<span id="pos-x">-</span>, <span id="pos-y">-</span>)</div>
+			<div>Health: <div class="bar"><div id="health-bar"></div><span id="health-value">- / -</span></div></div>
+			<div>Ping: <span id="stat-ping">-</span></div>
+			<div>Tps: <span id="stat-tps">-</span></div>
+			<div>Bandwidth 🤡: <span id="stat-bandwidth">-</span></div>
+			<label>Break walls: <input id="break-walls" type="checkbox"></label>
+			<button id="hunt-mode">Hunt mode</button>
+		</div>
+		<ul id="players"></ul>
+		<div id="inventory">
+			<ul id="inventory-items"></ul>
+		</div>
+	</body>
+</html>

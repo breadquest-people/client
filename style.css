@@ -1,0 +1,129 @@
+body {
+	margin: 0;
+	overflow: hidden;
+	font-family: monospace;
+}
+
+.bar {
+	display: inline-block;
+	position: relative;
+	width: 128px;
+	height: 14px;
+	background-color: #444;
+}
+.bar > div {
+	position: absolute;
+	top: 0;
+	left: 0;
+	height: 100%;
+	background-color: #f44;
+}
+.bar > span {
+	position: absolute;
+	top: 0;
+	left: 0;
+	width: 100%;
+	text-align: center;
+	color: #fff;
+	line-height: 14px;
+}
+
+#chat {
+	position: absolute;
+	bottom: 0;
+	left: 0;
+	width: 400px;
+	display: flex;
+	flex-direction: column;
+	background-color: rgba(0, 0, 0, 0.05);
+}
+#chat.active {
+	background-color: rgba(0, 0, 0, 0.2);
+}
+
+#chat-messages {
+	flex: 1;
+	margin: 0;
+	padding: 4px;
+	list-style: none;
+}
+#chat-input {
+	padding: 4px;
+	background-color: rgba(0, 0, 0, 0.5);
+	border: none;
+	color: #fff;
+	font-family: monospace;
+}
+#chat-input::placeholder {
+	color: #fff;
+}
+#chat-input:focus {
+	outline: none;
+}
+
+.username {
+	font-weight: bold;
+}
+.username::after {
+	content: " ";
+}
+
+#stats {
+	position: absolute;
+	top: 0;
+	left: 0;
+	background-color: rgba(0, 0, 0, 0.8);
+	padding: 8px;
+	color: #fff;
+}
+
+#players {
+	position: absolute;
+	top: 0;
+	right: 0;
+	background-color: rgba(0, 0, 0, 0.8);
+	padding: 8px;
+	margin: 0;
+	list-style: none;
+	color: #fff;
+}
+
+#inventory {
+	position: absolute;
+	bottom: 0;
+	right: 0;
+	padding: 8px;
+	background-color: rgba(0, 0, 0, 0.8);
+}
+#inventory-items {
+	padding: 0;
+	margin: 0;
+	list-style: none;
+}
+
+.item {
+	padding: 4px;
+	color: #fff;
+	cursor: pointer;
+}
+.item.active {
+	background-color: #fff;
+	color: #000;
+}
+.item > .icon {
+	display: inline-block;
+	width: 16px;
+	height: 16px;
+	margin-right: 4px;
+	image-rendering: pixelated;
+	vertical-align: middle;
+}
+.item > .name {
+	font-weight: bold;
+	vertical-align: middle;
+	margin-right: 8px;
+}
+.item > .count {
+	line-height: 16px;
+	vertical-align: middle;
+}
