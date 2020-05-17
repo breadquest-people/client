@@ -1,4 +1,4 @@
-const local = false;
+const local = true;
 
 const emptyTile = 128;
 const blockStartTile = 129;
@@ -72,7 +72,8 @@ let localPlayer = {
 	pos: {x: 0, y: 0},
 	username: null,
 	avatar: null,
-	bread: null
+	bread: null,
+    inv: {}
 };
 let localCrack = null;
 let entities = [localPlayer];
@@ -333,6 +334,7 @@ const itemNames = {
 let selectedItem = null;
 
 function updateInventory(inv) {
+    localPlayer.inv = inv;
 	document.getElementById("inventory-items").innerHTML = "";
 	let elems = {};
 	for (let id in inv) {
@@ -478,6 +480,36 @@ function render() {
 
 			let tile = getTile(newPos.x, newPos.y);
 
+            if (document.getElementById("autowall-lr").checked || document.getElementById("autowall-ud").checked) {
+                // get block we have the most of
+                let maxItem = -1;
+                let maxAmount = 0;
+                for (let [item, amount] of Object.entries(localPlayer.inv)) {
+                    if (parseInt(item) >= blockStartTile && parseInt(item) <= (blockStartTile + blockTileAmount) && amount > maxAmount) {
+                        maxAmount = amount;
+                        maxItem = item;
+                    }
+                }
+                if (maxItem == -1 || maxAmount < 2) {
+                    logChat(null, "Out of blocks!");
+                    if (!focused) { new Notification("Out of blocks!") }
+                    if (mode == "tunnel") { mode = "manual"; }
+                } else {
+                    if (document.getElementById("autowall-lr").checked) {
+                        queueCommands([
+                            {commandName: "placeTile", direction: 1, tile: maxItem},
+                            {commandName: "placeTile", direction: 3, tile: maxItem}
+                        ]);
+                    }
+                    if (document.getElementById("autowall-ud").checked) {
+                        queueCommands([
+                            {commandName: "placeTile", direction: 0, tile: maxItem},
+                            {commandName: "placeTile", direction: 2, tile: maxItem}
+                        ]);
+                    }
+                }
+            }
+
 			if (place) {
 				queueCommands([{commandName: "placeTile", direction: direction, tile: selectedItem}]);
 			} else if (
@@ -516,7 +548,7 @@ function render() {
 			let x = Math.floor(camera.x / chunkSize) + offset[0];
 			let y = Math.floor(camera.y / chunkSize) + offset[1];
 			if (chunkKey(x, y) in chunks) return;
-			fetchChunk(x, y);
+			if (!local) { fetchChunk(x, y); }
 		});
 	}
 
@@ -820,7 +852,7 @@ window.addEventListener("load", function() {
 					let chunkX = Math.floor(cmd.pos.x / chunkSize);
 					let chunkY = Math.floor(cmd.pos.y / chunkSize);
 					let key = chunkKey(chunkX, chunkY);
-					if (!(key in chunks)) {
+					if (!(key in chunks) && !local) {
 						fetchChunk(chunkX, chunkY);
 					}
 					break;
@@ -840,7 +872,7 @@ window.addEventListener("load", function() {
 							}
 						}
 					}
-					if (didChange) {
+					if (didChange && !local) {
 						fetch("https://daydun.com:2627/set/" + cmd.pos.x + "/" + cmd.pos.y, {
 							method: "POST",
 							body: new Uint8Array(cmd.tileList)
