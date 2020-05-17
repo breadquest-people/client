@@ -1,4 +1,4 @@
-const local = true;
+const local = false;
 
 const emptyTile = 128;
 const blockStartTile = 129;
