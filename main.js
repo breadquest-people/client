@@ -72,7 +72,8 @@ let localPlayer = {
 	pos: {x: 0, y: 0},
 	username: null,
 	avatar: null,
-	bread: null
+	bread: null,
+    inv: {}
 };
 let localCrack = null;
 let entities = [localPlayer];
@@ -147,9 +148,9 @@ function setTile(x, y, tile) {
 
 	let chunk = chunks[key];
 	let index = mod(y, chunkSize) * chunkSize + mod(x, chunkSize);
-	
+
 	if (chunk.data[index] === tile) return false;
-	
+
 	chunk.data[index] = tile;
 	chunk.needsRedraw = true;
 
@@ -157,7 +158,7 @@ function setTile(x, y, tile) {
 		console.log("Lucky", x, y);
 		if (!focused) new Notification("Lucky");
 	}
-	
+
 	return true;
 }
 
@@ -332,6 +333,7 @@ const itemNames = {
 let selectedItem = null;
 
 function updateInventory(inv) {
+    localPlayer.inv = inv;
 	document.getElementById("inventory-items").innerHTML = "";
 	let elems = {};
 	for (let id in inv) {
@@ -445,7 +447,7 @@ function render() {
 			walkPath = [];
 			mode = "manual";
 		}
-		
+
 		if (mode === "tunnel") {
 			if (localPlayer.pos[tunnelDir] == tunnelTarget) {
 				mode = "manual";
@@ -477,6 +479,36 @@ function render() {
 
 			let tile = getTile(newPos.x, newPos.y);
 
+            if (document.getElementById("autowall-lr").checked || document.getElementById("autowall-ud").checked) {
+                // get block we have the most of
+                let maxItem = -1;
+                let maxAmount = 0;
+                for (let [item, amount] of Object.entries(localPlayer.inv)) {
+                    if (parseInt(item) >= blockStartTile && parseInt(item) <= (blockStartTile + blockTileAmount) && amount > maxAmount) {
+                        maxAmount = amount;
+                        maxItem = item;
+                    }
+                }
+                if (maxItem == -1 || maxAmount < 2) {
+                    logChat(null, "Out of blocks!");
+                    if (!focused) { new Notification("Out of blocks!") }
+                    if (mode == "tunnel") { mode = "manual"; }
+                } else {
+                    if (document.getElementById("autowall-lr").checked) {
+                        queueCommands([
+                            {commandName: "placeTile", direction: 1, tile: maxItem},
+                            {commandName: "placeTile", direction: 3, tile: maxItem}
+                        ]);
+                    }
+                    if (document.getElementById("autowall-ud").checked) {
+                        queueCommands([
+                            {commandName: "placeTile", direction: 0, tile: maxItem},
+                            {commandName: "placeTile", direction: 2, tile: maxItem}
+                        ]);
+                    }
+                }
+            }
+
 			if (place) {
 				queueCommands([{commandName: "placeTile", direction: direction, tile: selectedItem}]);
 			} else if (
@@ -506,7 +538,7 @@ function render() {
 			}
 		}
 	}
-
+	
 	camera.x = localPlayer.pos.x + 0.5;
 	camera.y = localPlayer.pos.y + 0.5;
 	
@@ -515,10 +547,10 @@ function render() {
 			let x = Math.floor(camera.x / chunkSize) + offset[0];
 			let y = Math.floor(camera.y / chunkSize) + offset[1];
 			if (chunkKey(x, y) in chunks) return;
-			fetchChunk(x, y);
+			if (!local) { fetchChunk(x, y); }
 		});
 	}
-	
+
 	// Draw
 	ctx.clearRect(0, 0, canvas.width, canvas.height);
 
@@ -741,6 +773,10 @@ window.addEventListener("load", function() {
 		mode = "tunnel";
 	});
 
+    document.getElementById("eat").addEventListener("click", function() {
+        queueCommands([{"commandName":"eatBread"}]);
+    });
+
 	let chatInput = document.getElementById("chat-input");
 	window.addEventListener("keydown", event => {
 		if (event.code === "Enter" && document.activeElement !== chatInput) {
@@ -811,11 +847,11 @@ window.addEventListener("load", function() {
 					console.log("Move", localPlayer.pos.x, localPlayer.pos.y, "->", cmd.pos.x, cmd.pos.y);
 					localPlayer.pos = cmd.pos;
 					lastInput = Date.now();
-					
+
 					let chunkX = Math.floor(cmd.pos.x / chunkSize);
 					let chunkY = Math.floor(cmd.pos.y / chunkSize);
 					let key = chunkKey(chunkX, chunkY);
-					if (!(key in chunks)) {
+					if (!(key in chunks) && !local) {
 						fetchChunk(chunkX, chunkY);
 					}
 					break;
@@ -835,7 +871,7 @@ window.addEventListener("load", function() {
 							}
 						}
 					}
-					if (didChange) {
+					if (didChange && !local) {
 						fetch("https://daydun.com:2627/set/" + cmd.pos.x + "/" + cmd.pos.y, {
 							method: "POST",
 							body: new Uint8Array(cmd.tileList)
