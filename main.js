@@ -166,7 +166,6 @@ async function fetchChunk(x, y) {
 	chunks[chunkKey(x, y)] = chunk;
 	let data = await fetch("https://daydun.com:2627/get/" + x + "/" + y).then(res => res.arrayBuffer());
 	chunk.data = new Uint8Array(data);
-	console.log(data);
 	chunk.needsRedraw = true;
 }
 
@@ -508,8 +507,8 @@ function render() {
 		}
 	}
 
-	camera.x = localPlayer.pos.x;
-	camera.y = localPlayer.pos.y;
+	camera.x = localPlayer.pos.x + 0.5;
+	camera.y = localPlayer.pos.y + 0.5;
 	
 	if (localPlayer.username !== null) {
 		[[-1, 0], [-1, -1], [0, -1], [1, -1], [1, 0], [1, 1], [0, 1], [-1, 1]].map(offset => {
@@ -568,7 +567,7 @@ function render() {
 	ctx.strokeStyle = "#f00";
 	ctx.lineWidth = 0.1;
 	ctx.beginPath();
-	ctx.moveTo(0.5, 0.5);
+	ctx.moveTo(0, 0);
 	let x = 0;
 	let y = 0;
 	for (let i=walkPath.length - 1; i>=0; i--) {
@@ -576,23 +575,23 @@ function render() {
 		if (walkPath[i] === 1) x++;
 		if (walkPath[i] === 2) y++;
 		if (walkPath[i] === 3) x--;
-		ctx.lineTo(x + 0.5, y + 0.5);
+		ctx.lineTo(x, y);
 	}
 	ctx.stroke();
 
 	// Spawn radius
 	ctx.strokeStyle = "#f00";
 	//ctx.globalAlpha = 0.1;
-	ctx.strokeRect(-20, -20, 41, 41);
+	ctx.strokeRect(-20.5, -20.5, 41, 41);
 
 	// Entity FOV
 	ctx.strokeStyle = "#000";
 	//ctx.globalAlpha = 0.1;
-	ctx.strokeRect(-40, -40, 81, 81);
+	ctx.strokeRect(-40.5, -40.5, 81, 81);
 
 	// Tile FOV
 	ctx.strokeStyle = "#00f";
-	ctx.strokeRect(-25, -25, 50, 50);
+	ctx.strokeRect(-25.5, -25.5, 50, 50);
 
 	ctx.restore();
 
